@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>Fly Xenotype</name>
+  <author>Matt</author>
+  <packageId>matt.flyxenotype</packageId>
+  <supportedVersions><li>1.6</li></supportedVersions>
+  <description>Adds the Fly xenotype: colonists run on a compact insect-derived neural controller and choose their own work priorities and schedule. Multiplayer compatible.</description>
+  <modDependencies>
+    <li><packageId>brrainz.harmony</packageId><displayName>Harmony</displayName><steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl></li>
+  </modDependencies>
+  <loadAfter><li>brrainz.harmony</li><li>Ludeon.RimWorld.Biotech</li><li>rwmt.Multiplayer</li></loadAfter>
+</ModMetaData>

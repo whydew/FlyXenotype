@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <GeneDef>
+    <defName>FB_FlyBrain</defName>
+    <label>fly brain</label>
+    <description>Carriers run on a compact neural controller distilled from an insect connectome. They choose their own work and rest and cannot be given work priorities or a schedule.\n\nWhen doing one of the jobs they chose as most important, they work 10% faster.</description>
+    <geneClass>FlyXenotype.Gene_FlyBrain</geneClass>
+    <iconPath>UI/Icons/Genes/Gene_DeadCalm</iconPath> <!-- placeholder icon -->
+    <displayCategory>Miscellaneous</displayCategory>
+    <biostatCpx>3</biostatCpx>
+    <biostatMet>1</biostatMet>
+  </GeneDef>
+
+  <GeneDef>
+    <defName>FB_CompoundEyes</defName>
+    <label>compound eyes</label>
+    <description>Carriers have faceted eyes wired to fast motion-detecting circuits. They react to movement quickly, aim faster, and are twice as likely to spot a trap before stepping on it.</description>
+    <iconPath>FB/UI/Genes/Gene_FB_CompoundEyes</iconPath>
+    <iconColor>(0.78, 0.30, 0.25)</iconColor>
+    <displayCategory>Miscellaneous</displayCategory>
+    <biostatCpx>1</biostatCpx>
+    <biostatMet>-1</biostatMet>
+    <exclusionTags>
+      <li>EyeColor</li> <!-- replaces vanilla eye-colour genes; eye colour is picked per pawn -->
+    </exclusionTags>
+    <renderNodeProperties>
+      <li>
+        <nodeClass>FlyXenotype.PawnRenderNode_FlyEyes</nodeClass>
+        <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass>
+        <texPath>FB/HeadAttachments/FB_CompoundEyes</texPath>
+        <parentTagDef>Head</parentTagDef>
+        <rotDrawMode>Fresh, Rotting</rotDrawMode>
+        <drawData>
+          <defaultData>
+            <layer>64</layer> <!-- above hair (62), below headgear (70) -->
+          </defaultData>
+          <dataNorth>
+            <layer>10</layer>
+          </dataNorth>
+        </drawData>
+      </li>
+    </renderNodeProperties>
+    <statFactors>
+      <AimingDelayFactor>0.8</AimingDelayFactor>
+      <PawnTrapSpringChance>0.5</PawnTrapSpringChance>
+    </statFactors>
+  </GeneDef>
+
+  <GeneDef>
+    <defName>FB_EscapeReflex</defName>
+    <label>escape reflex</label>
+    <description>Carriers have a single giant nerve fiber running from the eyes to the legs, like the escape circuit of a fly. When something swings at them, they are already moving.</description>
+    <iconPath>UI/Icons/Genes/Gene_NakedSpeed</iconPath> <!-- placeholder icon -->
+    <displayCategory>Miscellaneous</displayCategory>
+    <biostatCpx>1</biostatCpx>
+    <biostatMet>-1</biostatMet>
+    <statOffsets>
+      <MeleeDodgeChance>15</MeleeDodgeChance>
+    </statOffsets>
+  </GeneDef>
+
+  <GeneDef>
+    <defName>FB_SugarDrive</defName>
+    <label>sugar drive</label>
+    <description>Carriers crave sugar. Eating berries, insect jelly, chocolate, agave, ambrosia or a fine or lavish meal gives them a mood boost. Carriers with a fly brain also favor cooking and growing when the colony runs low on sweet food.</description>
+    <geneClass>FlyXenotype.Gene_SugarDrive</geneClass>
+    <iconPath>UI/Icons/Genes/Gene_Optimist</iconPath> <!-- placeholder icon -->
+    <displayCategory>Miscellaneous</displayCategory>
+    <biostatCpx>1</biostatCpx>
+    <biostatMet>0</biostatMet>
+  </GeneDef>
+
+  <GeneDef>
+    <defName>FB_SwarmSense</defName>
+    <label>swarm sense</label>
+    <description>Carriers are soothed and sharpened by others of their kind. They work 3% faster for each other swarm-sense carrier of their faction within 12 cells (up to 12%), feel good in company, and feel lonely when none are on the map.</description>
+    <geneClass>FlyXenotype.Gene_SwarmSense</geneClass>
+    <iconPath>UI/Icons/Genes/Gene_PsychicBonding</iconPath> <!-- placeholder icon -->
+    <displayCategory>Miscellaneous</displayCategory>
+    <biostatCpx>1</biostatCpx>
+    <biostatMet>0</biostatMet>
+  </GeneDef>
+
+  <GeneDef>
+    <defName>FB_FlightMuscles</defName>
+    <label>flight muscles</label>
+    <description>Carriers have vestigial wings and spring-loaded leg muscles that let them hop great distances. Unlike longjump legs, this does not need hemogen.</description>
+    <iconPath>UI/Icons/Genes/Gene_LongJumpLegs</iconPath> <!-- vanilla icon reused -->
+    <displayCategory>Miscellaneous</displayCategory>
+    <abilities>
+      <li>FB_FlyHop</li>
+    </abilities>
+    <descriptionHyperlinks>
+      <AbilityDef>FB_FlyHop</AbilityDef>
+    </descriptionHyperlinks>
+    <biostatCpx>1</biostatCpx>
+    <biostatMet>-2</biostatMet>
+  </GeneDef>
+
+</Defs>

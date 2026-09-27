@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <FlyXenotype.FlySensorDef>
+    <defName>FB_Sensor_Fire</defName>
+    <sensor>Fire</sensor>
+    <crisisThreshold>0.25</crisisThreshold>
+    <weights><li><workType>Firefighter</workType><weight>3.0</weight></li></weights>
+  </FlyXenotype.FlySensorDef>
+  <FlyXenotype.FlySensorDef>
+    <defName>FB_Sensor_Injured</defName>
+    <sensor>Injured</sensor>
+    <crisisThreshold>0.5</crisisThreshold>
+    <weights><li><workType>Doctor</workType><weight>2.5</weight></li></weights>
+  </FlyXenotype.FlySensorDef>
+  <FlyXenotype.FlySensorDef>
+    <defName>FB_Sensor_FoodScarcity</defName>
+    <sensor>FoodScarcity</sensor>
+    <!-- chronic, not acute: drives demand but never forces Work mode -->
+    <weights>
+      <li><workType>Cooking</workType><weight>1.5</weight></li>
+      <li><workType>Growing</workType><weight>1.0</weight></li>
+      <li><workType>Hunting</workType><weight>1.0</weight></li>
+    </weights>
+  </FlyXenotype.FlySensorDef>
+  <FlyXenotype.FlySensorDef>
+    <defName>FB_Sensor_Blueprints</defName>
+    <sensor>Blueprints</sensor>
+    <weights><li><workType>Construction</workType><weight>1.0</weight></li></weights>
+  </FlyXenotype.FlySensorDef>
+  <FlyXenotype.FlySensorDef>
+    <defName>FB_Sensor_Haulables</defName>
+    <sensor>Haulables</sensor>
+    <weights><li><workType>Hauling</workType><weight>0.8</weight></li></weights>
+  </FlyXenotype.FlySensorDef>
+  <FlyXenotype.FlySensorDef>
+    <defName>FB_Sensor_Research</defName>
+    <sensor>Research</sensor>
+    <weights><li><workType>Research</workType><weight>0.6</weight></li></weights>
+  </FlyXenotype.FlySensorDef>
+</Defs>

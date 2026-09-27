@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- Vanilla hook in Humanlike.xml: after emergency work and urgent needs, before MainColonistBehaviorCore. -->
+  <ThinkTreeDef>
+    <defName>FB_FlyCrisis</defName>
+    <insertTag>Humanlike_PreMain</insertTag>
+    <insertPriority>100</insertPriority>
+    <thinkRoot Class="FlyXenotype.AI.ThinkNode_ConditionalFlyBrain">
+      <subNodes>
+        <li Class="FlyXenotype.AI.JobGiver_FlyCrisis" />
+      </subNodes>
+    </thinkRoot>
+  </ThinkTreeDef>
+</Defs>

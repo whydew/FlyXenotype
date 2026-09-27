@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- Fly head: forces one of the fly head shapes (see HeadTypeDefs/FB_HeadTypes.xml). -->
+  <GeneDef>
+    <defName>FB_FlyHead</defName>
+    <label>fly head</label>
+    <labelShortAdj>fly-headed</labelShortAdj>
+    <description>Carriers have a rounded, insect-like skull that narrows to a small chin.</description>
+    <iconPath>FB/UI/Genes/Gene_FB_FlyHead</iconPath>
+    <iconColor>(0.75, 0.75, 0.75)</iconColor>
+    <displayCategory>Cosmetic</displayCategory>
+    <biostatCpx>0</biostatCpx>
+    <exclusionTags>
+      <li>HeadType</li>
+    </exclusionTags>
+    <forcedHeadTypes>
+      <li>FB_FlyHead_Round</li>
+      <li>FB_FlyHead_Narrow</li>
+      <li>FB_FlyHead_Wide</li>
+    </forcedHeadTypes>
+  </GeneDef>
+
+  <!-- Antennae: skin-tinted head attachment drawn above hair, like vanilla mini-horns. -->
+  <GeneDef>
+    <defName>FB_Antennae</defName>
+    <label>fly antennae</label>
+    <description>Carriers grow two short antennae from the forehead, each ending in a small club and a feathery bristle.</description>
+    <iconPath>FB/UI/Genes/Gene_FB_Antennae</iconPath>
+    <iconColor>(0.75, 0.75, 0.75)</iconColor>
+    <displayCategory>Cosmetic</displayCategory>
+    <biostatCpx>0</biostatCpx>
+    <renderNodeProperties>
+      <li>
+        <nodeClass>PawnRenderNode_AttachmentHead</nodeClass>
+        <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass>
+        <texPath>FB/HeadAttachments/FB_Antennae</texPath>
+        <useSkinShader>true</useSkinShader>
+        <colorType>Skin</colorType>
+        <parentTagDef>Head</parentTagDef>
+        <rotDrawMode>Fresh, Rotting</rotDrawMode>
+        <drawData>
+          <defaultData>
+            <layer>80</layer>
+          </defaultData>
+          <dataNorth>
+            <layer>10</layer>
+          </dataNorth>
+        </drawData>
+      </li>
+    </renderNodeProperties>
+  </GeneDef>
+
+  <!-- Mandibles: small pincers at the mouth, drawn over beards. -->
+  <GeneDef>
+    <defName>FB_Mandibles</defName>
+    <label>mouth pincers</label>
+    <description>Carriers have a pair of small, hard pincers at the corners of the mouth.</description>
+    <iconPath>FB/UI/Genes/Gene_FB_Mandibles</iconPath>
+    <iconColor>(0.75, 0.75, 0.75)</iconColor>
+    <displayCategory>Cosmetic</displayCategory>
+    <biostatCpx>0</biostatCpx>
+    <renderNodeProperties>
+      <li>
+        <nodeClass>PawnRenderNode_AttachmentHead</nodeClass>
+        <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass>
+        <texPath>FB/HeadAttachments/FB_Mandibles</texPath>
+        <useSkinShader>true</useSkinShader>
+        <colorType>Skin</colorType>
+        <parentTagDef>Head</parentTagDef>
+        <rotDrawMode>Fresh, Rotting</rotDrawMode>
+        <drawData>
+          <defaultData>
+            <layer>68</layer>
+          </defaultData>
+        </drawData>
+      </li>
+    </renderNodeProperties>
+  </GeneDef>
+
+  <!-- Chitin skin: one of several dark shades per pawn (FlyLooks.ChitinColors). -->
+  <GeneDef>
+    <defName>FB_ChitinSkin</defName>
+    <label>chitin skin</label>
+    <labelShortAdj>chitin-skinned</labelShortAdj>
+    <description>Carriers have a thin, glossy chitin layer over their skin in a dark shade of brown, olive, maroon, bronze, charcoal or near-black.</description>
+    <geneClass>FlyXenotype.Gene_ChitinSkin</geneClass>
+    <iconPath>FB/UI/Genes/Gene_FB_ChitinSkin</iconPath>
+    <iconColor>(0.40, 0.33, 0.25)</iconColor>
+    <displayCategory>Cosmetic_Skin</displayCategory>
+    <biostatCpx>0</biostatCpx>
+    <exclusionTags>
+      <li>SkinColorOverride</li>
+    </exclusionTags>
+  </GeneDef>
+
+</Defs>

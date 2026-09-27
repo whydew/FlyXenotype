@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- Fly heads. Unisex (no eyes or lashes are drawn on the head; the compound-eye gene draws the eyes).
+       Only available to pawns with the FB_FlyHead gene, like vanilla gene-specific heads. -->
+  <HeadTypeDef ParentName="AverageBase">
+    <defName>FB_FlyHead_Round</defName>
+    <graphicPath>FB/Heads/FB_FlyHead_Round</graphicPath>
+    <gender>None</gender>
+    <randomChosen>false</randomChosen>
+    <requiredGenes><li>FB_FlyHead</li></requiredGenes>
+  </HeadTypeDef>
+
+  <HeadTypeDef ParentName="NarrowBase">
+    <defName>FB_FlyHead_Narrow</defName>
+    <graphicPath>FB/Heads/FB_FlyHead_Narrow</graphicPath>
+    <gender>None</gender>
+    <randomChosen>false</randomChosen>
+    <requiredGenes><li>FB_FlyHead</li></requiredGenes>
+  </HeadTypeDef>
+
+  <HeadTypeDef ParentName="AverageBase">
+    <defName>FB_FlyHead_Wide</defName>
+    <graphicPath>FB/Heads/FB_FlyHead_Wide</graphicPath>
+    <gender>None</gender>
+    <randomChosen>false</randomChosen>
+    <requiredGenes><li>FB_FlyHead</li></requiredGenes>
+  </HeadTypeDef>
+</Defs>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- Same jump as vanilla Longjump (range, sounds, verb), but powered by flight muscles instead of hemogen.
+       No hemogen cost; a 30-minute cooldown keeps it from being spammed. -->
+  <AbilityDef ParentName="LongJump">
+    <defName>FB_FlyHop</defName>
+    <label>fly hop</label>
+    <description>Beat vestigial wings and spring-loaded legs to hop to a distant location.</description>
+    <cooldownTicksRange>1250</cooldownTicksRange> <!-- 30 in-game minutes -->
+    <comps Inherit="False" />
+  </AbilityDef>
+</Defs>

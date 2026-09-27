@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <XenotypeDef>
+    <defName>FB_Fly</defName>
+    <label>fly</label>
+    <description>Flies are self-directed people wired from an insect connectome. They pick their own work and rest, dodge and react with insect speed, breed readily and shrug off disease. Their bodies are fragile, their metabolism runs hot, and they are happiest in a swarm with a steady supply of sugar.</description>
+    <descriptionShort>Self-directed, fast and evasive, but fragile and hungry. Ignores work tabs and schedules.</descriptionShort>
+    <iconPath>FB/UI/FB_Fly_XenotypeIcon</iconPath>
+    <inheritable>true</inheritable>
+    <factionlessGenerationWeight>1</factionlessGenerationWeight> <!-- same as other non-baseliner xenotypes -->
+    <genes>
+      <!-- new -->
+      <li>FB_FlyBrain</li>
+      <li>FB_CompoundEyes</li>
+      <li>FB_EscapeReflex</li>
+      <li>FB_SugarDrive</li>
+      <li>FB_SwarmSense</li>
+      <li>FB_FlightMuscles</li>
+      <!-- new (looks) -->
+      <li>FB_FlyHead</li>
+      <li>FB_Antennae</li>
+      <li>FB_Mandibles</li>
+      <li>FB_ChitinSkin</li>
+      <!-- vanilla -->
+      <li>Beard_NoBeardOnly</li> <!-- keeps the mouth pincers visible -->
+      <li>MoveSpeed_Quick</li>
+      <li>Learning_Fast</li>
+      <li>Immunity_Strong</li>
+      <li>StrongStomach</li>
+      <li>Delicate</li>
+      <li>Beauty_Ugly</li>
+      <li>Fertile</li>
+    </genes>
+  </XenotypeDef>
+</Defs>

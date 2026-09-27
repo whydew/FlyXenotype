@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <ScenarioDef ParentName="ScenarioBase">
+    <defName>FB_TheSwarm</defName>
+    <label>The Swarm</label>
+    <description>You were grown in a gene lab, your minds wired from the connectome of a common fly. When the lab's funding died, so did any reason to keep you. Five of you walked out the back door and kept walking.\n\nNow you've found empty land on this rimworld. No handlers, no schedules - just the swarm, and a hunger for anything sweet.\n\nNote: Flies choose their own work and schedules. You can draft them, but you can't assign their jobs.</description>
+    <scenario>
+      <summary>Five Flies strike out on their own - the standard Fly xenotype start.</summary>
+      <!-- Faction comes from ScenarioBase: PlayerColony, which already grants the 7 vanilla ClassicStart research projects. -->
+      <parts>
+
+        <!-- Config pages: 5 Flies to start, 3 more Flies on the bench to swap in. -->
+        <li Class="FlyXenotype.ScenPart_FlyStartingPawns">
+          <def>ConfigurePawnsXenotypes</def>
+          <pawnChoiceCount>8</pawnChoiceCount>
+          <customSummary>Start with five Flies.</customSummary>
+          <xenotypeCounts>
+            <li>
+              <xenotype>FB_Fly</xenotype>
+              <count>5</count>
+              <description>fly</description>
+              <requiredAtStart>true</requiredAtStart>
+            </li>
+          </xenotypeCounts>
+        </li>
+
+        <!-- Walk in: no drop pods, no cryptosleep sickness. -->
+        <li Class="ScenPart_PlayerPawnsArriveMethod">
+          <def>PlayerPawnsArriveMethod</def>
+          <method>Standing</method>
+          <visible>false</visible>
+        </li>
+
+        <!-- Starting research: vanilla 7 (from faction) + "sweet tooth". -->
+        <li Class="ScenPart_StartingResearch">
+          <def>StartingResearch</def>
+          <project>TreeSowing</project>
+        </li>
+        <li Class="ScenPart_StartingResearch">
+          <def>StartingResearch</def>
+          <project>Cocoa</project>
+        </li>
+
+        <!-- Basics (5 pawns with a fast metabolism, so food is a bit heavier than Crashlanded). -->
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Silver</thingDef>
+          <count>600</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>MealSurvivalPack</thingDef>
+          <count>50</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>MedicineIndustrial</thingDef>
+          <count>20</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>MedicineHerbal</thingDef>
+          <count>15</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>ComponentIndustrial</thingDef>
+          <count>25</count>
+        </li>
+
+        <!-- Sugar stock -->
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>RawBerries</thingDef>
+          <count>120</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>InsectJelly</thingDef>
+          <count>40</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Chocolate</thingDef>
+          <count>20</count>
+        </li>
+
+        <!-- Light weapons: fragile but evasive, fast-aiming pawns. -->
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>MeleeWeapon_Knife</thingDef>
+          <stuff>Steel</stuff>
+          <count>2</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Bow_Short</thingDef>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Gun_Revolver</thingDef>
+        </li>
+
+        <!-- Building materials near the start -->
+        <li Class="ScenPart_ScatterThingsNearPlayerStart">
+          <def>ScatterThingsNearPlayerStart</def>
+          <thingDef>Steel</thingDef>
+          <count>450</count>
+        </li>
+        <li Class="ScenPart_ScatterThingsNearPlayerStart">
+          <def>ScatterThingsNearPlayerStart</def>
+          <thingDef>WoodLog</thingDef>
+          <count>400</count>
+        </li>
+
+        <!-- Game start dialog -->
+        <li Class="ScenPart_GameStartDialog">
+          <def>GameStartDialog</def>
+          <text>The lab called you an experiment. A controller distilled from a fly's brain, grown into a person.\n\nWhen the money ran out, the experiment was to be "concluded." Five of you didn't wait to find out what that meant.\n\nNow the lab is far behind you. Nobody tells you when to sleep or what to work on - the swarm decides for itself. Build a hive. Find something sweet.</text>
+          <closeSound>GameStartSting</closeSound>
+        </li>
+
+      </parts>
+    </scenario>
+  </ScenarioDef>
+
+</Defs>

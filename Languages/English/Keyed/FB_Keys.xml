@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <FB.LockedTip>This colonist is a Fly. It decides this for itself.</FB.LockedTip>
+  <FB.WorkTip>{0}: priority {1} (chosen by the fly brain)\nNeural drive last evaluation: {2} spikes\nCurrent mode: {3}</FB.WorkTip>
+  <FB.ScheduleTip>Fly brain schedule. Shows what it chose each hour today.\nCurrent mode: {0}</FB.ScheduleTip>
+  <FB.StatSwarm>Swarm sense ({0} nearby)</FB.StatSwarm>
+  <FB.StatFocus>Fly brain focus (own top-priority work)</FB.StatFocus>
+</LanguageData>

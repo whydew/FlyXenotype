@@ -128,6 +128,17 @@ namespace FlyXenotype
         public const int ModeMinTicks = 1250;
         public const int BucketMargin = 2;
 
+        // Schedule shaping (need levels are synced, so these gates are MP-safe).
+        public const float SleepEntry = 0.70f;      // below vanilla's 0.75 fall-asleep cap
+        public const float SleepExit = 0.99f;       // vanilla wakes at 1.0
+        public const float JoyEntry = 0.40f;        // vanilla "Low" recreation starts below 0.30
+        public const float JoyForce = 0.15f;        // "Very low": go relax regardless of the brain
+        public const float JoyExit = 0.80f;
+        public const int JoyMaxTicks = 5000;        // 2 in-game hours
+        public const int SleepMaxTicks = 30000;     // 12 in-game hours (safety valve if a Fly can't fall asleep)
+        public const int JoyCooldownTicks = 5000;   // after a capped Joy block, no Joy for 2 hours
+        public int joyCooldownUntil;
+
         public override void PostAdd() { base.PostAdd(); FlyRegistry.Register(this); }
         public override void PostRemove() { FlyRegistry.Unregister(this); base.PostRemove(); }
 
@@ -189,14 +200,44 @@ namespace FlyXenotype
             if (rest < 0.10f) { SetMode(FlyMode.Sleep, tick); return; }       // exhaustion beats everything
             if (crisis && rest > 0.30f) { SetMode(FlyMode.Work, tick); return; } // acute crisis, only if rested enough
 
+            float joy = pawn.needs?.joy?.CurLevel ?? 1f;
+            bool night = FlyClock.IsNight(pawn);
+
+            // Sleep latch: once a Fly goes to bed it stays in Sleep until rested. Vanilla pawns only
+            // fall asleep below 0.75 rest and wake at 1.0, so short Sleep blocks were wasted walking/idling.
+            if (mode == FlyMode.Sleep && rest < SleepExit && tick - modeSinceTick < SleepMaxTicks) return;
+
+            // Timing comes from the FlyWire circuit (daylight arousal vs dFB sleep switch); this only stops
+            // Sleep blocks a pawn couldn't use (vanilla won't fall asleep above 0.75 rest).
+            bool sleepAllowed = rest < SleepEntry;
+
+            // Joy latch: stay until satisfied, capped so a colony with no recreation can't trap a Fly.
+            bool joyCooling = tick < joyCooldownUntil;
+            if (mode == FlyMode.Joy)
+            {
+                bool capped = tick - modeSinceTick >= JoyMaxTicks;
+                if (capped) joyCooldownUntil = tick + JoyCooldownTicks;
+                else if (joy < JoyExit && !(sleepAllowed && night)) return;
+                joyCooling = capped || joyCooling;
+            }
+            if (joy < JoyForce && !joyCooling && !crisis) { SetMode(FlyMode.Joy, tick); return; } // recreation-starved
+
+            bool joyAllowed = joy < JoyEntry && !joyCooling;
+
             int best = -1, bestCount = -1;
             for (int m = 0; m < FlyBrainTopology.ModeCount; m++)
             {
+                if (m == 1 && !sleepAllowed) continue; // Sleep
+                if (m == 2 && !joyAllowed) continue;   // Joy
                 int c = brain.Counts[t.ModeStart + m];
                 if (c > bestCount) { bestCount = c; best = m; } // ties keep the lower index: stable
             }
             FlyMode challenger = bestCount <= 0 ? FlyMode.Anything : (FlyMode)(best + 1);
             if (challenger == mode) return;
+
+            // A mode whose gate just closed (rested, recreation satisfied/capped) hands over immediately.
+            bool currentGated = (mode == FlyMode.Sleep && !sleepAllowed) || (mode == FlyMode.Joy && !joyAllowed);
+            if (currentGated) { SetMode(challenger, tick); return; }
 
             int current = mode == FlyMode.Anything ? 0 : brain.Counts[t.ModeStart + (int)mode - 1];
             bool committed = tick - modeSinceTick < ModeMinTicks;
@@ -285,6 +326,7 @@ namespace FlyXenotype
             base.ExposeData();
             Scribe_Values.Look(ref mode, "flyMode", FlyMode.Anything);
             Scribe_Values.Look(ref modeSinceTick, "flyModeSince");
+            Scribe_Values.Look(ref joyCooldownUntil, "flyJoyCooldown");
             Scribe_Values.Look(ref lastEvalTick, "flyLastEval", -99999);
             Scribe_Values.Look(ref temperament, "flyTemperament");
             Scribe_Values.Look(ref crisis, "flyCrisis");
@@ -334,6 +376,16 @@ namespace FlyXenotype
         }
     }
 
+    /// <summary>Local time of day at the pawn's tile (derived from synced ticks + tile longitude).</summary>
+    public static class FlyClock
+    {
+        public static bool IsNight(Pawn pawn)
+        {
+            int h = GenLocalDate.HourOfDay(pawn);
+            return h >= 22 || h < 6;
+        }
+    }
+
     /// <summary>Per-pawn sensors -> external input currents (Q16). Reads synced state only.</summary>
     public static class FlyPawnSense
     {
@@ -348,7 +400,8 @@ namespace FlyXenotype
 
             input[(int)FlySensor.RestDeficit] = Q(rest != null ? 1.6f * (1f - rest.CurLevel) : 0f);
             input[(int)FlySensor.FoodDeficit] = Q(food != null ? 1f - food.CurLevel : 0f);
-            input[(int)FlySensor.JoyDeficit] = Q(joy != null ? 1.4f * (1f - joy.CurLevel) : 0f);
+            // Recreation only presses once it drops below "satisfied" (was linear from 1.0, which let Joy win most hours).
+            input[(int)FlySensor.JoyDeficit] = Q(joy != null ? 2.2f * Mathf.Max(0f, 0.6f - joy.CurLevel) : 0f);
             input[(int)FlySensor.PsyfocusDeficit] = Q(ModsConfig.RoyaltyActive && pawn.HasPsylink && pawn.psychicEntropy != null
                 ? 1.2f * (1f - pawn.psychicEntropy.CurrentPsyfocus) : 0f);
             input[(int)FlySensor.LowMood] = Q(mood != null ? 1f - mood.CurLevel : 0f);
@@ -356,6 +409,8 @@ namespace FlyXenotype
             for (int s = (int)FlySensor.Crisis; s < t.SensorCount; s++) input[s] = sense.SensorQ16[s];
             // Tonic drive on the Work mode neuron: when no need is pressing, the Fly works.
             input[t.ModeStart] = Q(0.55f + 0.1f * temperament);
+            // Clock neurons and anterior-bulb (light) drive for the FlyWire sleep circuit, from local time of day.
+            FlyCircadian.Fill(t, input, GenLocalDate.DayTick(pawn) * 1440 / GenDate.TicksPerDay);
 
             // Work DNs: colony demand + skill + passion - learning saturation + temperament (+ sugar drive).
             bool sugarDrive = pawn.genes != null && pawn.genes.HasActiveGene(FB_DefOf.FB_SugarDrive);
@@ -439,6 +494,7 @@ namespace FlyXenotype
             for (int i = 0; i < sweetDefs.Count; i++) sweets += map.resourceCounter.GetCount(sweetDefs[i]);
             SweetScarcity = Mathf.Clamp01(1f - sweets / (colonists * 10f));
             Gene_SwarmSense.RefreshMap(map);
+            Gene_HiveLearning.RefreshMap(map);
             Set(FlySensor.Harvestable, harvestable);
             Set(FlySensor.Bills, bills);
             RecomputeDemand();
@@ -496,6 +552,70 @@ namespace FlyXenotype
                 loggedPatches = true; // patch list after every mod finished patching
                 FlyDiag.LogPatches(typeof(Pawn_WorkSettings), nameof(Pawn_WorkSettings.SetPriority));
             }
+        }
+
+        public override void LoadedGame()
+        {
+            base.LoadedGame();
+            MigrateGenes();
+        }
+
+        /// <summary>
+        /// Save migration: Flies created before a balance change still carry the old vanilla gene.
+        /// Swap each for its Fly replacement (same endo/xeno slot). Runs on load in pawn-list order, so it
+        /// is identical on every client (and in MP the host's save already contains the result).
+        /// </summary>
+        private static void MigrateGenes()
+        {
+            Swap("Learning_Fast", FB_DefOf.FB_HiveLearning);  // 2026-09-27: quick study -> hive learning
+            Swap("MoveSpeed_Quick", FB_DefOf.FB_DartingGait); // 2026-09-27: fast runner -> darting gait
+            FixGeneClasses();
+        }
+
+        /// <summary>
+        /// A gene saved before its def got a geneClass (e.g. escape reflex) loads as a plain Gene.
+        /// Re-add any Fly-mod gene whose instance type no longer matches its def, in the same slot.
+        /// </summary>
+        private static void FixGeneClasses()
+        {
+            int fixedCount = 0;
+            var stale = new List<Gene>();
+            foreach (Pawn p in PawnsFinder.AllMapsWorldAndTemporary_AliveOrDead)
+            {
+                if (p.genes == null) continue;
+                stale.Clear();
+                foreach (Gene g in p.genes.GenesListForReading)
+                    if (g.def.defName.StartsWith("FB_") && g.def.geneClass != null && g.GetType() != g.def.geneClass)
+                        stale.Add(g);
+                foreach (Gene g in stale)
+                {
+                    bool xeno = p.genes.Xenogenes.Contains(g);
+                    GeneDef def = g.def;
+                    p.genes.RemoveGene(g);
+                    p.genes.AddGene(def, xeno);
+                    fixedCount++;
+                }
+            }
+            if (fixedCount > 0) Log.Message($"[FlyXenotype] Updated {fixedCount} gene(s) to their current class.");
+        }
+
+        private static void Swap(string oldDefName, GeneDef replacement)
+        {
+            GeneDef oldDef = DefDatabase<GeneDef>.GetNamedSilentFail(oldDefName);
+            if (oldDef == null || replacement == null) return;
+            int swapped = 0;
+            foreach (Pawn p in PawnsFinder.AllMapsWorldAndTemporary_AliveOrDead)
+            {
+                if (p.genes == null || p.genes.Xenotype != FB_DefOf.FB_Fly) continue;
+                if (p.genes.GetGene(replacement) != null) continue;
+                Gene old = p.genes.GetGene(oldDef);
+                if (old == null) continue;
+                bool xeno = p.genes.Xenogenes.Contains(old);
+                p.genes.RemoveGene(old);
+                p.genes.AddGene(replacement, xeno);
+                swapped++;
+            }
+            if (swapped > 0) Log.Message($"[FlyXenotype] Replaced {oldDef.label} with {replacement.label} on {swapped} Fly pawn(s).");
         }
     }
 }

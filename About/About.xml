@@ -4,7 +4,7 @@
   <author>Matt</author>
   <packageId>matt.flyxenotype</packageId>
   <supportedVersions><li>1.6</li></supportedVersions>
-  <description>Adds the Fly xenotype: colonists run on a compact insect-derived neural controller and choose their own work priorities and schedule. Multiplayer compatible.</description>
+  <description>Adds the Fly xenotype: colonists run on a compact insect-derived neural controller and choose their own work priorities and schedule. Their sleep circuit is wired from the real fruit-fly brain: FlyWire connectome v783 (FlyWire Consortium; Dorkenwald et al. 2024, Schlegel et al. 2024; CC-BY 4.0), via the connectivity table of Shiu et al. 2024. Multiplayer compatible.</description>
   <modDependencies>
     <li><packageId>brrainz.harmony</packageId><displayName>Harmony</displayName><steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl></li>
   </modDependencies>

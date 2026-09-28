@@ -50,7 +50,8 @@
   <GeneDef>
     <defName>FB_EscapeReflex</defName>
     <label>escape reflex</label>
-    <description>Carriers have a single giant nerve fiber running from the eyes to the legs, like the escape circuit of a fly. When something swings at them, they are already moving.</description>
+    <description>Carriers have a single giant nerve fiber running from the eyes to the legs, like the escape circuit of a fly. When something swings at them, they are already moving.\n\nWhen attacked in melee, carriers have a 35% chance to hop 3-6 tiles away before the blow lands (at most once per hour). They don't do this while deliberately brawling.</description>
+    <geneClass>FlyXenotype.Gene_EscapeReflex</geneClass>
     <iconPath>UI/Icons/Genes/Gene_NakedSpeed</iconPath> <!-- placeholder icon -->
     <displayCategory>Miscellaneous</displayCategory>
     <biostatCpx>1</biostatCpx>
@@ -95,7 +96,37 @@
       <AbilityDef>FB_FlyHop</AbilityDef>
     </descriptionHyperlinks>
     <biostatCpx>1</biostatCpx>
-    <biostatMet>-2</biostatMet>
+    <biostatMet>-1</biostatMet>
+  </GeneDef>
+
+  <!-- Darting gait: cheaper, smaller speed boost that replaces vanilla fast runner (+0.2, met -3) on Flies. -->
+  <GeneDef ParentName="GeneMoveSpeedBase">
+    <defName>FB_DartingGait</defName>
+    <label>darting gait</label>
+    <labelShortAdj>darting</labelShortAdj>
+    <description>Carriers move in short, quick bursts like a fly on a tabletop. They move a little faster than normal.</description>
+    <iconPath>UI/Icons/Genes/Gene_QuickMovespeed</iconPath> <!-- vanilla icon, tinted -->
+    <iconColor>(0.55, 0.85, 0.45)</iconColor>
+    <displayOrderInCategory>9</displayOrderInCategory>
+    <statOffsets>
+      <MoveSpeed>0.1</MoveSpeed>
+    </statOffsets>
+    <biostatCpx>1</biostatCpx>
+    <biostatMet>-1</biostatMet>
+  </GeneDef>
+
+  <!-- Hive learning: replaces quick study for Flies. Scales with the number of other carriers of the
+       same faction on the map (counted on the 250-tick colony-sense pass). -->
+  <GeneDef ParentName="GeneLearningBase">
+    <defName>FB_HiveLearning</defName>
+    <label>hive learning</label>
+    <description>Carriers pick up skills by watching others of their kind. Learning speed grows with the size of the swarm: +10% for each other hive-learning carrier of the same faction on the map, up to +50%.\n\nAlone, carriers learn 10% slower than normal.</description>
+    <geneClass>FlyXenotype.Gene_HiveLearning</geneClass>
+    <iconPath>UI/Icons/Genes/Gene_FastLearning</iconPath> <!-- vanilla icon, tinted -->
+    <iconColor>(0.55, 0.85, 0.45)</iconColor>
+    <displayOrderInCategory>36</displayOrderInCategory>
+    <biostatCpx>2</biostatCpx>
+    <biostatMet>0</biostatMet>
   </GeneDef>
 
 </Defs>

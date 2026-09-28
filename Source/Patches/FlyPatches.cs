@@ -190,3 +190,47 @@ namespace FlyXenotype.Patches
         }
     }
 }
+
+namespace FlyXenotype
+{
+    /// <summary>
+    /// The skill tooltip lists GlobalLearningFactor contributors by hand (hediffs, traits, gene statOffsets),
+    /// so stat parts like hive learning never appear there. Append our line. UI-only: no simulation state touched.
+    /// </summary>
+    [HarmonyLib.HarmonyPatch(typeof(RimWorld.SkillUI), "ListGlobalLearningSpeedOffsets")]
+    public static class SkillUI_HiveLearningLine
+    {
+        public static void Postfix(RimWorld.SkillRecord sk, System.Text.StringBuilder sb)
+        {
+            Verse.Pawn p = sk?.Pawn;
+            Gene_HiveLearning g = p?.genes?.GetFirstGeneOfType<Gene_HiveLearning>();
+            if (g == null || !g.Active) return;
+            float off = g.LearningOffset;
+            sb.AppendLine("  - " + Verse.TranslatorFormattedStringExtensions.Translate("FB.StatHive", g.others)
+                + ": " + (off >= 0f ? "+" : "") + Verse.GenText.ToStringPercent(off));
+        }
+    }
+}
+
+namespace FlyXenotype
+{
+    /// <summary>
+    /// Escape reflex hook. Prefix on the attacker's melee swing: if the target Fly escapes, skip the swing
+    /// entirely (no hit, no stagger) and report "not cast", exactly like a vanilla miss. Simulation-side.
+    /// </summary>
+    [HarmonyLib.HarmonyPatch(typeof(RimWorld.Verb_MeleeAttack), "TryCastShot")]
+    public static class MeleeAttack_EscapeReflex
+    {
+        public static bool Prefix(RimWorld.Verb_MeleeAttack __instance, ref bool __result)
+        {
+            Verse.Pawn attacker = __instance.CasterPawn;
+            if (attacker == null || !attacker.Spawned || attacker.stances.FullBodyBusy) return true;
+            if (!(__instance.CurrentTarget.Thing is Verse.Pawn target)) return true;
+            Gene_EscapeReflex g = target.genes?.GetFirstGeneOfType<Gene_EscapeReflex>();
+            if (g == null || !g.TryEscape(attacker)) return true;
+            if (attacker.Spawned) attacker.Drawer.Notify_MeleeAttackOn(target);
+            __result = false;
+            return false;
+        }
+    }
+}

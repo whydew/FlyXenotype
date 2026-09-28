@@ -36,6 +36,7 @@ namespace FlyXenotype.Brain
 
         public readonly int SensorCount, WorkCount, NeuronCount;
         public readonly int CentralStart, ModeStart, WorkStart;
+        public readonly int ConnStart, ConnCount; // FlyWire sleep/clock circuit block (0 if absent)
         public readonly int[] RowStart;   // length NeuronCount + 1
         public readonly ushort[] Pre;     // pre-synaptic neuron per edge
         public readonly short[] Weight;   // Q8 signed weight per edge
@@ -43,14 +44,24 @@ namespace FlyXenotype.Brain
 
         public static FlyBrainTopology Current;
 
-        private FlyBrainTopology(int sensors, int works, int[] rowStart, ushort[] pre, short[] weight)
+        // Interface gains between game signals and the FlyWire block (Q8). Tuned with Tools/SleepSim.
+        // Static (not const) only so the offline tuner can override them; the game never changes them.
+        public static short DirectRestToSleep = 128;
+        public static short RestToR5 = 256;
+        public static short RestToDfb = 200;
+        public static short DfbToSleep = 24;
+        public static short HeliconToWork = 96;
+
+        private FlyBrainTopology(int sensors, int works, int conn, int[] rowStart, ushort[] pre, short[] weight)
         {
             SensorCount = sensors;
             WorkCount = works;
             CentralStart = sensors;
             ModeStart = CentralStart + CentralCount;
             WorkStart = ModeStart + ModeCount;
-            NeuronCount = WorkStart + works;
+            ConnStart = WorkStart + works;
+            ConnCount = conn;
+            NeuronCount = ConnStart + conn;
             RowStart = rowStart;
             Pre = pre;
             Weight = weight;
@@ -65,10 +76,13 @@ namespace FlyXenotype.Brain
         /// mutual inhibition between mode DNs, rest modes inhibiting all work DNs.
         /// interoSensors = indices of rest/joy/psyfocus sensors that drive Sleep/Joy/Meditate.
         /// </summary>
-        public static FlyBrainTopology BuildDefault(int sensorCount, int workCount, int restSensor, int joySensor, int focusSensor, int crisisSensor)
+        public static FlyBrainTopology BuildDefault(int sensorCount, int workCount, int restSensor, int joySensor, int focusSensor, int crisisSensor,
+            bool sleepCircuit = true)
         {
             int central = sensorCount, mode = central + CentralCount, work = mode + ModeCount;
-            int n = work + workCount;
+            int conn = work + workCount;
+            int connCount = sleepCircuit ? FlyConnectomeSleep.Types.Length : 0;
+            int n = conn + connCount;
             var rows = new System.Collections.Generic.List<(ushort pre, short w)>[n];
             for (int i = 0; i < n; i++) rows[i] = new System.Collections.Generic.List<(ushort, short)>(8);
 
@@ -83,7 +97,9 @@ namespace FlyXenotype.Brain
                 rows[central + c].Add(((ushort)(central + (c + CentralCount - 1) % CentralCount), -96));
             }
             // Interoceptive sensors -> mode DNs.
-            rows[mode + 1].Add(((ushort)restSensor, 384));   // Sleep
+            // With the FlyWire circuit, sleep pressure reaches the Sleep DN mainly through the dFB (below);
+            // the direct path is kept weak as a fallback.
+            rows[mode + 1].Add(((ushort)restSensor, (short)(sleepCircuit ? DirectRestToSleep : 384)));   // Sleep
             rows[mode + 2].Add(((ushort)joySensor, 320));    // Joy
             rows[mode + 3].Add(((ushort)focusSensor, 320));  // Meditate
             rows[mode + 0].Add(((ushort)crisisSensor, 512)); // Work (crisis)
@@ -102,6 +118,24 @@ namespace FlyXenotype.Brain
                 rows[work + w].Add(((ushort)(central + w % CentralCount), 32));
             }
 
+            if (sleepCircuit)
+            {
+                // Measured wiring: FlyWire v783 cell-type connectivity (Tools/build_connectome.py).
+                short[] ed = FlyConnectomeSleep.Edges;
+                for (int k = 0; k < ed.Length; k += 3)
+                    rows[conn + ed[k]].Add(((ushort)(conn + ed[k + 1]), ed[k + 2]));
+                // Interface (modelling choice, not connectome): sleep need excites the R5 ring homeostat and
+                // the sleep-promoting dFB (Liu et al. 2016; Donlea et al. 2014); dFB output drives the Sleep DN.
+                rows[conn + FlyConnectomeSleep.ER5].Add(((ushort)restSensor, RestToR5));
+                foreach (int d in FlyConnectomeSleep.DfbSleep)
+                {
+                    rows[conn + d].Add(((ushort)restSensor, RestToDfb));
+                    rows[mode + 1].Add(((ushort)(conn + d), DfbToSleep));
+                }
+                // Helicon cells (ExR1) carry arousal from the anterior bulb; they push toward Work.
+                rows[mode + 0].Add(((ushort)(conn + FlyConnectomeSleep.ExR1), HeliconToWork));
+            }
+
             var rowStart = new int[n + 1];
             int edges = 0;
             for (int i = 0; i < n; i++) { rowStart[i] = edges; edges += rows[i].Count; }
@@ -110,7 +144,54 @@ namespace FlyXenotype.Brain
             var wt = new short[edges];
             for (int i = 0, e = 0; i < n; i++)
                 foreach (var (p, w) in rows[i]) { pre[e] = p; wt[e] = w; e++; }
-            return new FlyBrainTopology(sensorCount, workCount, rowStart, pre, wt);
+            return new FlyBrainTopology(sensorCount, workCount, connCount, rowStart, pre, wt);
+        }
+    }
+
+    /// <summary>
+    /// External drive to the clock neurons and anterior-bulb (TuBu) neurons by local time of day.
+    /// Integer tables (Q16, hourly, linearly interpolated by minute) so every client computes the same value.
+    /// Profiles are approximate activity phases from the fly circadian literature:
+    /// s-LNv morning, LNd evening, DN1p late night/dawn, DN1a night; TuBu follows light (visual pathway).
+    /// </summary>
+    public static class FlyCircadian
+    {
+        private const int H = 65536 / 100; // 1% of an input unit
+        public static int ClockGainPct = 125; // tuned with Tools/SleepSim (static, not saved: same on every client)
+        public static int LightGainPct = 150;
+        //                                  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23
+        private static readonly int[] Morning = { 10, 15, 22, 32, 42, 52, 60, 55, 42, 28, 16,  8,  5,  5,  5,  5,  5,  5,  5,  5,  5,  6,  7,  8 };
+        private static readonly int[] Evening = {  8,  5,  5,  5,  5,  5,  5,  5,  5,  5,  6,  8, 12, 18, 28, 40, 52, 60, 58, 48, 34, 22, 14, 10 };
+        private static readonly int[] Dawn    = { 45, 52, 58, 60, 56, 48, 36, 24, 14,  8,  6,  5,  5,  5,  5,  5,  6,  8, 12, 18, 25, 32, 38, 42 };
+        private static readonly int[] Night   = { 55, 55, 52, 46, 38, 28, 18, 10,  6,  5,  5,  5,  5,  5,  5,  5,  5,  6, 10, 18, 28, 38, 46, 52 };
+        private static readonly int[] Light   = {  4,  4,  4,  4,  6, 14, 30, 42, 46, 48, 48, 48, 48, 48, 48, 48, 46, 42, 30, 14,  6,  4,  4,  4 };
+
+        private static int Lerp(int[] tab, int minuteOfDay)
+        {
+            int h = minuteOfDay / 60, m = minuteOfDay % 60;
+            int a = tab[h], b = tab[(h + 1) % 24];
+            return (a * 60 + (b - a) * m) * H / 60;
+        }
+
+        /// <summary>Adds clock/TuBu drive into the input buffer (no-op if the topology has no sleep circuit).</summary>
+        public static void Fill(FlyBrainTopology t, int[] input, int minuteOfDay)
+        {
+            if (t.ConnCount == 0) return;
+            int c = t.ConnStart;
+            if (minuteOfDay < 0) minuteOfDay = 0;
+            minuteOfDay %= 1440;
+            int morning = Lerp(Morning, minuteOfDay) * ClockGainPct / 100, evening = Lerp(Evening, minuteOfDay) * ClockGainPct / 100;
+            int dawn = Lerp(Dawn, minuteOfDay) * ClockGainPct / 100, night = Lerp(Night, minuteOfDay) * ClockGainPct / 100;
+            int light = Lerp(Light, minuteOfDay) * LightGainPct / 100;
+            input[c + FlyConnectomeSleep.s_LNv_a] += morning;
+            input[c + FlyConnectomeSleep.s_LNv_b] += morning;
+            input[c + FlyConnectomeSleep.LNd_a] += evening;
+            input[c + FlyConnectomeSleep.LNd_b] += evening;
+            input[c + FlyConnectomeSleep.LNd_c] += evening;
+            input[c + FlyConnectomeSleep.DN1pA] += dawn;
+            input[c + FlyConnectomeSleep.DN1pB] += dawn;
+            input[c + FlyConnectomeSleep.DN1a] += night;
+            for (int i = FlyConnectomeSleep.TuBu01a; i <= FlyConnectomeSleep.TuBu09_TuBu10; i++) input[c + i] += light;
         }
     }
 
